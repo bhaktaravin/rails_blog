@@ -23,3 +23,4 @@ Things you may want to cover:
 
 * ...
 # rails_blog
+# rails_blog
