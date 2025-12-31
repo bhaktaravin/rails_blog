@@ -14,4 +14,7 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
    root "posts#index"
+
+   get "/health", to: proc { [200, {}, ["OK"]] }
+
 end
