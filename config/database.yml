@@ -10,33 +10,19 @@ development:
   encoding: unicode
   database: rails_blog_development
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-  username: <%= ENV["PGUSER"] || "postgres" %>
-  password: <%= ENV["PGPASSWORD"] || "" %>
-  host: <%= ENV["PGHOST"] || "localhost" %>
-  port: <%= ENV["PGPORT"] || 5432 %>
-  timeout: 5000
 
 test:
   adapter: postgresql
   encoding: unicode
   database: rails_blog_test
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-  username: <%= ENV["PGUSER"] || "postgres" %>
-  password: <%= ENV["PGPASSWORD"] || "" %>
-  host: <%= ENV["PGHOST"] || "localhost" %>
-  port: <%= ENV["PGPORT"] || 5432 %>
-  timeout: 5000
+  url: <%= ENV['DATABASE_URL'] %>
 
 production:
   primary:
     adapter: postgresql
     encoding: unicode
-    database: <%= ENV["DATABASE_URL"] %>
-    pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-    username: <%= ENV["PGUSER"] || "postgres" %>
-    password: <%= ENV["PGPASSWORD"] || "" %>
-    host: <%= ENV["PGHOST"] || "localhost" %>
-    port: <%= ENV["PGPORT"] || 5432 %>
+    url: <%= ENV["DATABASE_URL"] %>
     timeout: 5000
   cache:
     adapter: postgresql
