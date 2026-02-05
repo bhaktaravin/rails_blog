@@ -19,7 +19,11 @@ Rails.application.configure do
   config.public_file_server.headers = { "cache-control" => "public, max-age=#{1.year.to_i}" }
 
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
-  # config.asset_host = "http://assets.example.com"
+  # Uncomment and set to your CDN URL for better performance
+  # config.asset_host = ENV.fetch("CDN_HOST", "https://cdn.example.com")
+  
+  # Enable Gzip compression for better performance
+  config.middleware.insert_before ActionDispatch::Static, Rack::Deflater
 
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local

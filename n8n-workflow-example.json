@@ -1,0 +1,185 @@
+{
+  "name": "Rails Blog Newsletter - Weekly Digest",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 1"
+            }
+          ]
+        }
+      },
+      "name": "Schedule Trigger - Every Monday 9 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://yourblog.com/api/v1/newsletters/digest?days=7&limit=10",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{ $credentials.apiKey }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Get Newsletter Digest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [470, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1",
+          "name": "Rails Blog API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://yourblog.com/api/v1/newsletters/subscribers",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{ $credentials.apiKey }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Get Subscribers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [690, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1",
+          "name": "Rails Blog API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "batchSize": 50,
+        "options": {}
+      },
+      "name": "Split In Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 1,
+      "position": [910, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Get digest posts from first HTTP request\nconst digestData = $node[\"Get Newsletter Digest\"].json.digest;\nconst posts = digestData.posts;\nconst subscriber = $json;\n\n// Build HTML email content\nlet htmlContent = `\n<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }\n    h1 { color: #333; border-bottom: 3px solid #007bff; padding-bottom: 10px; }\n    .post { margin: 25px 0; padding: 20px; background: #f8f9fa; border-left: 4px solid #007bff; }\n    .post h2 { margin-top: 0; color: #007bff; }\n    .post h2 a { color: #007bff; text-decoration: none; }\n    .post h2 a:hover { text-decoration: underline; }\n    .excerpt { color: #555; line-height: 1.6; margin: 10px 0; }\n    .meta { color: #666; font-size: 14px; margin-top: 10px; }\n    .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; color: #999; font-size: 12px; }\n    .footer a { color: #007bff; text-decoration: none; }\n  </style>\n</head>\n<body>\n  <h1>🚀 Weekly Blog Digest</h1>\n  <p>Hi there! Here are the top posts from this week:</p>\n`;\n\n// Add each post\nposts.forEach((post, index) => {\n  htmlContent += `\n  <div class=\"post\">\n    <h2><a href=\"${post.url}\">${post.title}</a></h2>\n    <p class=\"excerpt\">${post.excerpt}</p>\n    <div class=\"meta\">By ${post.author} | ${post.views} views | ${new Date(post.published_at).toLocaleDateString()}</div>\n  </div>\n  `;\n});\n\n// Add footer with unsubscribe\nhtmlContent += `\n  <div class=\"footer\">\n    <p>You're receiving this because you subscribed to our newsletter.</p>\n    <p>\n      <a href=\"${subscriber.unsubscribe_url}\">Unsubscribe</a> | \n      <a href=\"https://yourblog.com\">Visit Blog</a>\n    </p>\n  </div>\n</body>\n</html>\n`;\n\nreturn {\n  json: {\n    to: subscriber.email,\n    subject: `Weekly Digest - ${posts.length} New Posts`,\n    html: htmlContent\n  }\n};"
+      },
+      "name": "Build Email Content",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1130, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "newsletter@yourblog.com",
+        "toEmail": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "html",
+        "message": "={{ $json.html }}",
+        "options": {}
+      },
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1350, 300],
+      "credentials": {
+        "smtp": {
+          "id": "2",
+          "name": "SMTP Account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger - Every Monday 9 AM": {
+      "main": [
+        [
+          {
+            "node": "Get Newsletter Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Newsletter Digest": {
+      "main": [
+        [
+          {
+            "node": "Get Subscribers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Subscribers": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split In Batches": {
+      "main": [
+        [
+          {
+            "node": "Build Email Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Email Content": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

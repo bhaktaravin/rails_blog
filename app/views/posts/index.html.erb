@@ -1,17 +1,25 @@
 <h1>All Posts</h1>
 
-<%= link_to 'New Post', new_post_path, class: 'button' %>
+<% if user_signed_in? %>
+  <%= link_to 'New Post', new_post_path, class: 'button' %>
+<% else %>
+  <%= link_to 'Sign in to post', new_user_session_path, class: 'button' %>
+<% end %>
 
 <ul>
 	<% @posts.each do |post| %>
 		<li>
 			<h2><%= link_to post.title, post_path(post) %></h2>
-			<p><%= truncate(post.body, length: 100) %></p>
-			<small>By <%= post.user&.name || 'Unknown' %></small>
-			<div>
-				<%= link_to 'Edit', edit_post_path(post) %> |
-				<%= link_to 'Delete', post, method: :delete, data: { confirm: 'Are you sure?' } %>
-			</div>
+			<p><%= sanitize truncate(post.body, length: 200) %></p>
+			<small>By <%= post.user&.username || post.user&.name || 'Unknown' %> • <%= time_ago_in_words(post.created_at) %> ago</small>
+			<% if user_signed_in? && current_user == post.user %>
+				<div>
+					<%= link_to 'Edit', edit_post_path(post) %> |
+					<%= button_to 'Delete', post, method: :delete, data: { turbo_confirm: 'Are you sure?' }, form: { style: 'display:inline;' } %>
+				</div>
+			<% end %>
 		</li>
 	<% end %>
 </ul>
+
+<%= paginate @posts %>

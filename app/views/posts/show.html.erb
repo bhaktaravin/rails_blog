@@ -1,6 +1,50 @@
-<h1><%= @post.title %></h1>
-<p><%= @post.body %></p>
-<p><small>By <%= @post.user&.name || 'Unknown' %></small></p>
+<% 
+  set_meta_tags(
+    title: @post.title,
+    description: @post.body.to_plain_text.truncate(160),
+    keywords: "blog, #{@post.title.downcase}",
+    og: {
+      title: @post.title,
+      type: 'article',
+      url: post_url(@post),
+      description: @post.body.to_plain_text.truncate(160),
+      article: {
+        published_time: @post.created_at.iso8601,
+        modified_time: @post.updated_at.iso8601,
+        author: @post.user&.username || @post.user&.name
+      }
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: @post.title,
+      description: @post.body.to_plain_text.truncate(160)
+    }
+  )
+%>
 
-<%= link_to 'Edit', edit_post_path(@post) %> |
+<article itemscope itemtype="http://schema.org/BlogPosting">
+  <h1 itemprop="headline"><%= @post.title %></h1>
+  
+  <div class="post-meta">
+    <p>
+      <small>
+        By <span itemprop="author"><%= @post.user&.username || @post.user&.name || 'Unknown' %></span> • 
+        <time itemprop="datePublished" datetime="<%= @post.created_at.iso8601 %>">
+          <%= time_ago_in_words(@post.created_at) %> ago
+        </time> •
+        <span><%= reading_time(@post.body) %></span>
+      </small>
+    </p>
+  </div>
+
+  <div itemprop="articleBody">
+    <%= sanitize @post.body, tags: %w[p br strong em u h1 h2 h3 h4 ul ol li a], attributes: %w[href] %>
+  </div>
+
+  <meta itemprop="dateModified" content="<%= @post.updated_at.iso8601 %>">
+</article>
+
+<% if user_signed_in? && current_user == @post.user %>
+  <%= link_to 'Edit', edit_post_path(@post) %> |
+<% end %>
 <%= link_to 'Back', posts_path %>
