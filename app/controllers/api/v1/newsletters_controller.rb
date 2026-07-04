@@ -1,6 +1,18 @@
 module Api
   module V1
     class NewslettersController < BaseController
+      # POST /api/v1/newsletters/subscriptions
+      # Creates a newsletter subscription for automation clients (e.g. n8n)
+      def create_subscription
+        subscription = NewsletterSubscription.new(subscription_params)
+
+        if subscription.save
+          render json: { message: "Subscribed successfully" }, status: :created
+        else
+          render json: { errors: subscription.errors.full_messages }, status: :unprocessable_entity
+        end
+      end
+
       # GET /api/v1/newsletters/subscribers
       # Returns all active subscribers for n8n to send emails
       def subscribers
@@ -98,6 +110,10 @@ module Api
           ActionController::Base.helpers.strip_tags(html),
           length: length
         )
+      end
+
+      def subscription_params
+        params.require(:newsletter_subscription).permit(:email)
       end
     end
   end

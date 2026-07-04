@@ -22,6 +22,16 @@ class Rack::Attack
     req.ip if req.path == '/posts' && req.post?
   end
 
+  # Throttle newsletter web subscriptions by IP
+  throttle('newsletter_subscriptions/ip', limit: 5, period: 10.minutes) do |req|
+    req.ip if req.path == '/newsletter_subscriptions' && req.post?
+  end
+
+  # Throttle newsletter API subscriptions by IP
+  throttle('api_newsletter_subscriptions/ip', limit: 20, period: 10.minutes) do |req|
+    req.ip if req.path == '/api/v1/newsletters/subscriptions' && req.post?
+  end
+
   # Block suspicious requests
   blocklist('block suspicious IPs') do |req|
     # Block if user agent is blank

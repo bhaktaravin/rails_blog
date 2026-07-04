@@ -5,12 +5,14 @@ Rails.application.routes.draw do
   # Newsletter subscriptions
   resources :newsletter_subscriptions, only: [:new, :create]
   get 'newsletters/unsubscribe/:token', to: 'newsletter_subscriptions#unsubscribe', as: :unsubscribe_newsletter
+  post 'newsletters/unsubscribe/:token', to: 'newsletter_subscriptions#perform_unsubscribe', as: :perform_unsubscribe_newsletter
   post 'newsletters/resubscribe/:token', to: 'newsletter_subscriptions#resubscribe', as: :resubscribe_newsletter
   
   # API for n8n automation
   namespace :api do
     namespace :v1 do
       get 'newsletters/subscribers', to: 'newsletters#subscribers'
+      post 'newsletters/subscriptions', to: 'newsletters#create_subscription'
       post 'newsletters/webhook', to: 'newsletters#webhook'
       get 'newsletters/digest', to: 'newsletters#digest'
     end
