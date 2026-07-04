@@ -4,6 +4,9 @@
 # belong in git's global ignore instead:
 # `$XDG_CONFIG_HOME/git/ignore` or `~/.config/git/ignore`
 
+# VS Code / Cursor workspace files
+*.code-workspace
+
 # Ignore bundler config.
 /.bundle
 
